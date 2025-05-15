@@ -8,6 +8,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { calculateDistance, calculateWalkingTime, formatDistance, getCampusCenter } from "@/lib/mapUtils";
+import { getIconForBuildingType, getHighlightedIcon, getUserLocationIcon } from "@/lib/mapIcons";
 
 // Fix Leaflet icon issue in React
 // This is needed because Leaflet's default icon relies on URLs that don't work in the bundled app
@@ -193,6 +194,7 @@ export default function LeafletMapView({ onMarkerSelect, selectedBuilding }: Lea
                   }
                 },
               }}
+              icon={getIconForBuildingType(building.type)}
             >
               <Popup>
                 <div className="p-2">
@@ -222,14 +224,7 @@ export default function LeafletMapView({ onMarkerSelect, selectedBuilding }: Lea
           {userLocation && (
             <Marker 
               position={userLocation}
-              icon={new L.Icon({
-                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
-                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-                iconSize: [25, 41],
-                iconAnchor: [12, 41],
-                popupAnchor: [1, -34],
-                shadowSize: [41, 41]
-              })}
+              icon={getUserLocationIcon()}
             >
               <Popup>
                 <div>Your Location</div>

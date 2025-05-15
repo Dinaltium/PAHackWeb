@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Building } from "@shared/schema";
 import Sidebar from "@/components/layout/Sidebar";
 import LeafletMapView from "@/components/map/LeafletMapView";
 import ScheduleDrawer from "@/components/schedule/ScheduleDrawer";
+import WelcomeCard from "@/components/WelcomeCard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Filter } from "lucide-react";
@@ -12,6 +13,20 @@ import { MapProviderProvider } from "@/hooks/useMapProvider";
 export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedBuilding, setSelectedBuilding] = useState<Building | null>(null);
+  const [showWelcome, setShowWelcome] = useState(false);
+
+  // Check if this is the first visit
+  useEffect(() => {
+    // Slight delay to ensure the map loads first
+    const timer = setTimeout(() => {
+      const hasVisitedBefore = localStorage.getItem("hasVisitedBefore");
+      if (!hasVisitedBefore) {
+        setShowWelcome(true);
+      }
+    }, 1500); // Show welcome after 1.5 seconds
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   const { data: buildings } = useQuery<Building[]>({
     queryKey: ['/api/buildings'],
@@ -32,8 +47,14 @@ export default function HomePage() {
     }
   };
 
+  const handleDismissWelcome = () => {
+    setShowWelcome(false);
+    localStorage.setItem("hasVisitedBefore", "true");
+  };
+
   return (
     <MapProviderProvider>
+      {showWelcome && <WelcomeCard onDismiss={handleDismissWelcome} />}
       <div className="flex flex-col md:flex-row">
         {/* Desktop Sidebar */}
         <aside className="hidden md:block w-64 bg-white shadow-md sidebar overflow-y-auto" style={{ height: 'calc(100vh - 64px)' }}>
