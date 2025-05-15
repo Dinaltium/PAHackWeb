@@ -171,9 +171,11 @@ export default function LeafletMapView({ onMarkerSelect, selectedBuilding }: Lea
         
         <MapContainer 
           center={userLocation || defaultPosition} 
-          zoom={16} 
+          zoom={17} 
           style={{ height: '100%', width: '100%' }}
           whenReady={(mapEvent) => setMap(mapEvent.target)}
+          minZoom={14}
+          maxZoom={19}
         >
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'

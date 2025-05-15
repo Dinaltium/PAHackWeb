@@ -65,6 +65,6 @@ export function formatDistance(distanceInMeters: number): string {
  * @returns [latitude, longitude]
  */
 export function getCampusCenter(): [number, number] {
-  // Default campus center (can be configured for specific campus)
-  return [34.0689, -118.4452]; 
+  // PA College of Engineering coordinates
+  return [12.806763, 74.932512]; 
 }

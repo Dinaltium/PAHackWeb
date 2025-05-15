@@ -23,7 +23,7 @@ export const buildings = pgTable("buildings", {
   longitude: text("longitude").notNull(),
   type: text("type"), // e.g., "academic", "dining", "residence", etc.
   address: text("address"),
-  campus: text("campus").default("PA College of Engineering, Konaje, Mangalore"),
+  campus: text("campus").default("PA College of Engineering, Mangalore"),
 });
 
 export const studentLocations = pgTable("student_locations", {
