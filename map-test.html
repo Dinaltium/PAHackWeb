@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Map Test</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+    <style>
+      body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+      }
+      #map {
+        height: 100vh;
+        width: 100%;
+      }
+      .marker-info {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: white;
+        padding: 10px;
+        border-radius: 4px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        max-width: 300px;
+        z-index: 1000;
+        display: none;
+      }
+      .leaflet-marker-icon {
+        filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.3));
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+    <div id="info-panel" class="marker-info">
+      <h3 style="margin-top: 0; font-size: 16px">Building Information</h3>
+      <div id="building-name" style="font-weight: bold"></div>
+      <div
+        id="building-type"
+        style="color: #666; font-size: 14px; margin-bottom: 10px"
+      ></div>
+      <div id="building-distance" style="font-size: 14px"></div>
+      <button
+        id="close-info"
+        style="
+          background: #f0f0f0;
+          border: none;
+          padding: 5px 10px;
+          margin-top: 10px;
+          cursor: pointer;
+          border-radius: 3px;
+        "
+      >
+        Close
+      </button>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+      // Campus center
+      const defaultPosition = [12.806763, 74.932512];
+
+      // Create map
+      const map = L.map("map").setView(defaultPosition, 17);
+
+      // Add OpenStreetMap tiles
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      }).addTo(map);
+
+      // Campus POI coordinates
+      const campusPOIs = [
+        {
+          name: "Central Library",
+          coordinates: {
+            latitude: 12.806626789025971,
+            longitude: 74.93297528724706,
+          },
+          type: "library",
+        },
+        {
+          name: "Pace Workshop",
+          coordinates: {
+            latitude: 12.806594934779813,
+            longitude: 74.93156237993341,
+          },
+          type: "academic",
+        },
+        {
+          name: "Parking",
+          coordinates: {
+            latitude: 12.806381640041346,
+            longitude: 74.93194055906237,
+          },
+          type: "facility",
+        },
+        {
+          name: "College ATM",
+          coordinates: {
+            latitude: 12.80660419426253,
+            longitude: 74.93238242142701,
+          },
+          type: "facility",
+        },
+        {
+          name: "PACE Auditorium",
+          coordinates: {
+            latitude: 12.807692933393275,
+            longitude: 74.9323815995066,
+          },
+          type: "administrative",
+        },
+        {
+          name: "PACE Masjid",
+          coordinates: {
+            latitude: 12.808634120489803,
+            longitude: 74.93362402415325,
+          },
+          type: "facility",
+        },
+        {
+          name: "PACE Pharmacy",
+          coordinates: {
+            latitude: 12.808499317546259,
+            longitude: 74.93238019630758,
+          },
+          type: "facility",
+        },
+        {
+          name: "Boys Hostel",
+          coordinates: {
+            latitude: 12.809797397164683,
+            longitude: 74.93348459882178,
+          },
+          type: "residence",
+        },
+        {
+          name: "Ikku's Shop",
+          coordinates: {
+            latitude: 12.809679205169092,
+            longitude: 74.93358188473309,
+          },
+          type: "dining",
+        },
+      ];
+
+      // Colors for different building types
+      const typeColors = {
+        academic: "#3B82F6", // blue
+        administrative: "#6366F1", // indigo
+        residence: "#EC4899", // pink
+        dining: "#F59E0B", // amber
+        recreation: "#10B981", // emerald
+        library: "#6D28D9", // purple
+        facility: "#64748B", // slate
+        default: "#EF4444", // red
+      }; // Info panel functionality
+      const infoPanel = document.getElementById("info-panel");
+      const buildingName = document.getElementById("building-name");
+      const buildingType = document.getElementById("building-type");
+      const buildingDistance = document.getElementById("building-distance");
+      const closeInfoBtn = document.getElementById("close-info");
+
+      closeInfoBtn.addEventListener("click", () => {
+        infoPanel.style.display = "none";
+      });
+
+      // Function to calculate distance between points
+      function calculateDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371e3; // metres
+        const φ1 = (lat1 * Math.PI) / 180;
+        const φ2 = (lat2 * Math.PI) / 180;
+        const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+        const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+
+        const a =
+          Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+          Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+      }
+
+      // Function to calculate walking time in minutes
+      function calculateWalkingTime(distanceInMeters) {
+        // Average walking speed: 1.4 m/s or 84 m/min
+        const walkingSpeedMeterPerMinute = 84;
+        return Math.round(distanceInMeters / walkingSpeedMeterPerMinute);
+      }
+
+      // Add markers for all POIs
+      campusPOIs.forEach((poi) => {
+        const color = typeColors[poi.type] || typeColors.default;
+
+        // Create a simple colored marker with letter inside
+        const icon = L.divIcon({
+          html: `<div style="background-color: ${color}; width: 24px; height: 24px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 12px;">${poi.type
+            .charAt(0)
+            .toUpperCase()}</div>`,
+          className: "custom-marker",
+          iconSize: [28, 28],
+          iconAnchor: [14, 14],
+        });
+
+        // Add marker
+        const marker = L.marker(
+          [poi.coordinates.latitude, poi.coordinates.longitude],
+          { icon: icon }
+        ).addTo(map);
+
+        // Click handler instead of popup
+        marker.on("click", function () {
+          // Show the info panel
+          infoPanel.style.display = "block";
+          buildingName.textContent = poi.name;
+          buildingType.textContent =
+            poi.type.charAt(0).toUpperCase() + poi.type.slice(1);
+
+          // Calculate distance from map center
+          const distance = calculateDistance(
+            map.getCenter().lat,
+            map.getCenter().lng,
+            poi.coordinates.latitude,
+            poi.coordinates.longitude
+          );
+
+          const walkingTime = calculateWalkingTime(distance);
+          buildingDistance.textContent = `Distance: ${(distance / 1000).toFixed(
+            2
+          )} km (${walkingTime} min walk)`;
+        });
+      });
+    </script>
+  </body>
+</html>

@@ -4,16 +4,28 @@ import { Building } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
 import MapControls from "./MapControls";
 import MapMarker from "./MapMarker";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
-import { calculateDistance, calculateWalkingTime, formatDistance, getCampusCenter } from "@/lib/mapUtils";
-import { getIconForBuildingType, getHighlightedIcon, getUserLocationIcon } from "@/lib/mapIcons";
+import DistanceCalculator from "./DistanceCalculator";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
+import {
+  calculateDistance,
+  calculateWalkingTime,
+  formatDistance,
+  getCampusCenter,
+} from "@/lib/mapUtils";
+import {
+  getIconForBuildingType,
+  getHighlightedIcon,
+  getUserLocationIcon,
+} from "@/lib/mapIcons";
+import { MapReadyEvent } from "@/types/leaflet-extensions";
+import { CAMPUS_POIS } from "@/types/index";
 
 // Fix Leaflet icon issue in React
 // This is needed because Leaflet's default icon relies on URLs that don't work in the bundled app
-import icon from 'leaflet/dist/images/marker-icon.png';
-import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+import icon from "leaflet/dist/images/marker-icon.png";
+import iconShadow from "leaflet/dist/images/marker-shadow.png";
 
 let DefaultIcon = L.icon({
   iconUrl: icon,
@@ -22,19 +34,36 @@ let DefaultIcon = L.icon({
   iconAnchor: [12, 41],
   popupAnchor: [1, -34],
   tooltipAnchor: [16, -28],
-  shadowSize: [41, 41]
+  shadowSize: [41, 41],
 });
 
 L.Marker.prototype.options.icon = DefaultIcon;
 
 // Component to update the map view when selected building changes
-function ChangeMapView({ center, zoom }: { center: [number, number], zoom: number }) {
+function ChangeMapView({
+  center,
+  zoom,
+}: {
+  center: [number, number];
+  zoom: number;
+}) {
   const map = useMap();
-  
+
   useEffect(() => {
     map.setView(center, zoom);
   }, [center, zoom, map]);
-  
+
+  return null;
+}
+
+// Component to initialize map instance and expose it to parent
+function MapInitializer({ setMap }: { setMap: (map: L.Map) => void }) {
+  const map = useMap();
+
+  useEffect(() => {
+    setMap(map);
+  }, [map, setMap]);
+
   return null;
 }
 
@@ -43,15 +72,43 @@ interface LeafletMapViewProps {
   selectedBuilding?: Building | null;
 }
 
-export default function LeafletMapView({ onMarkerSelect, selectedBuilding }: LeafletMapViewProps) {
+export default function LeafletMapView({
+  onMarkerSelect,
+  selectedBuilding,
+}: LeafletMapViewProps) {
   const { toast } = useToast();
-  const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
+  const [userLocation, setUserLocation] = useState<[number, number] | null>(
+    null
+  );
   const [mapLoaded, setMapLoaded] = useState(false);
   const [map, setMap] = useState<L.Map | null>(null);
-
+  const [showDistanceCalculator, setShowDistanceCalculator] = useState(false);
   const { data: buildings, isLoading } = useQuery<Building[]>({
-    queryKey: ['/api/buildings'],
+    queryKey: ["/api/buildings"],
+    onError: (error) => {
+      console.error("Failed to fetch buildings:", error);
+      toast({
+        title: "Data Error",
+        description: "Could not load building data. Please try refreshing.",
+        variant: "destructive",
+      });
+    },
   });
+  // Fallback to hardcoded campus POIs if API fails
+  const displayBuildings: Building[] =
+    buildings && buildings.length > 0
+      ? buildings
+      : CAMPUS_POIS.map((poi, index) => ({
+          id: index + 1,
+          name: poi.name,
+          shortName: poi.name.split(" ").pop() || "",
+          description: `${poi.name} at PA College of Engineering`,
+          latitude: poi.coordinates.latitude.toString(),
+          longitude: poi.coordinates.longitude.toString(),
+          type: poi.type,
+          address: "PA College of Engineering, Mangalore",
+          campus: "PA College of Engineering, Mangalore",
+        }));
 
   // Get user location
   useEffect(() => {
@@ -80,45 +137,44 @@ export default function LeafletMapView({ onMarkerSelect, selectedBuilding }: Lea
   const defaultPosition: [number, number] = getCampusCenter();
 
   // Calculate position for selected building
-  const selectedPosition = selectedBuilding 
-    ? [parseFloat(selectedBuilding.latitude), parseFloat(selectedBuilding.longitude)] as [number, number]
+  const selectedPosition = selectedBuilding
+    ? ([
+        parseFloat(selectedBuilding.latitude),
+        parseFloat(selectedBuilding.longitude),
+      ] as [number, number])
     : defaultPosition;
 
   // Calculate walking distance
   const getWalkingInfo = (buildingLat: number, buildingLng: number) => {
     if (!userLocation) return null;
-    
+
     try {
       const distance = calculateDistance(
-        userLocation[0], 
-        userLocation[1], 
-        buildingLat, 
+        userLocation[0],
+        userLocation[1],
+        buildingLat,
         buildingLng
       );
-      
+
       const walkingTime = calculateWalkingTime(distance);
-      
+
       return {
         distance: Math.round(distance),
-        walkingTime
+        walkingTime,
       };
     } catch (error) {
       console.error("Error calculating walking info:", error);
       return null;
     }
   };
-
   // Function to handle map initialization
   useEffect(() => {
-    // This will run after the component is mounted
-    // We set a timeout to ensure the map is rendered
-    const timer = setTimeout(() => {
+    // Set mapLoaded to true when map is set
+    if (map) {
       setMapLoaded(true);
-    }, 500);
-    
-    return () => clearTimeout(timer);
-  }, []);
-  
+    }
+  }, [map]);
+
   // Map control functions
   const handleZoomIn = () => {
     if (map) {
@@ -141,7 +197,6 @@ export default function LeafletMapView({ onMarkerSelect, selectedBuilding }: Lea
       }
     }
   };
-
   const handleCenterOnUser = () => {
     if (map && userLocation) {
       try {
@@ -158,35 +213,41 @@ export default function LeafletMapView({ onMarkerSelect, selectedBuilding }: Lea
     }
   };
 
+  const handleShowDistanceCalculator = () => {
+    setShowDistanceCalculator(true);
+  };
+
   return (
     <div className="relative">
-      <div 
-        className="map-container bg-neutral-200 relative overflow-hidden"
-        style={{ height: "calc(100vh - 64px - 4rem)" }}
+      {" "}
+      <div
+        className="map-container bg-neutral-200 relative overflow-hidden rounded-lg"
+        style={{ height: "calc(100vh - 64px - 2rem)" }}
       >
         {isLoading && (
           <div className="absolute inset-0 flex items-center justify-center bg-neutral-100/50 z-50">
             <div className="text-primary">Loading map data...</div>
           </div>
-        )}
-        
-        <MapContainer 
-          center={userLocation || defaultPosition} 
-          zoom={17} 
-          style={{ height: '100%', width: '100%' }}
-          whenReady={(mapEvent) => setMap(mapEvent.target)}
+        )}{" "}
+        <MapContainer
+          center={userLocation || defaultPosition}
+          zoom={17}
+          style={{ height: "100%", width: "100%" }}
           minZoom={14}
           maxZoom={19}
         >
+          <MapInitializer setMap={setMap} />
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-          
-          {buildings?.map((building) => (
-            <Marker 
+          />{" "}
+          {displayBuildings?.map((building) => (
+            <Marker
               key={building.id}
-              position={[parseFloat(building.latitude), parseFloat(building.longitude)]}
+              position={[
+                parseFloat(building.latitude),
+                parseFloat(building.longitude),
+              ]}
               eventHandlers={{
                 click: () => {
                   if (onMarkerSelect) {
@@ -198,20 +259,40 @@ export default function LeafletMapView({ onMarkerSelect, selectedBuilding }: Lea
             >
               <Popup>
                 <div className="p-2">
-                  <h3 className="font-semibold text-neutral-800">{building.name}</h3>
+                  <h3 className="font-semibold text-neutral-800">
+                    {building.name}
+                  </h3>
                   {building.address && (
-                    <p className="text-sm text-neutral-600">{building.address}</p>
-                  )}
+                    <p className="text-sm text-neutral-600">
+                      {building.address}
+                    </p>
+                  )}{" "}
                   {userLocation && (
-                    <div className="text-xs text-neutral-500 mt-1">
+                    <div className="mt-2">
+                      <div className="flex items-center text-blue-600 text-sm font-medium">
+                        <i className="fa fa-route mr-1"></i> Distance & Time
+                      </div>
                       {(() => {
                         const walkInfo = getWalkingInfo(
-                          parseFloat(building.latitude), 
+                          parseFloat(building.latitude),
                           parseFloat(building.longitude)
                         );
-                        return walkInfo 
-                          ? `${formatDistance(walkInfo.distance)} · ${walkInfo.walkingTime} min walk` 
-                          : 'Distance unknown';
+                        return walkInfo ? (
+                          <div className="mt-1 grid grid-cols-2 gap-1 text-xs">
+                            <div className="flex items-center text-neutral-700">
+                              <i className="fa fa-walking mr-1"></i>{" "}
+                              {formatDistance(walkInfo.distance)}
+                            </div>
+                            <div className="flex items-center text-neutral-700">
+                              <i className="fa fa-clock mr-1"></i>{" "}
+                              {walkInfo.walkingTime} min
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-xs text-neutral-500">
+                            Distance unknown
+                          </div>
+                        );
                       })()}
                     </div>
                   )}
@@ -219,40 +300,41 @@ export default function LeafletMapView({ onMarkerSelect, selectedBuilding }: Lea
               </Popup>
             </Marker>
           ))}
-          
           {/* User marker */}
           {userLocation && (
-            <Marker 
-              position={userLocation}
-              icon={getUserLocationIcon()}
-            >
+            <Marker position={userLocation} icon={getUserLocationIcon()}>
               <Popup>
                 <div>Your Location</div>
               </Popup>
             </Marker>
           )}
-          
           {/* Update view when selected building changes */}
           {selectedBuilding && (
-            <ChangeMapView 
-              center={selectedPosition} 
-              zoom={18} 
-            />
+            <ChangeMapView center={selectedPosition} zoom={18} />
           )}
         </MapContainer>
-      </div>
-      
+      </div>{" "}
       {mapLoaded && (
-        <MapControls 
-          onZoomIn={handleZoomIn}
-          onZoomOut={handleZoomOut}
-          onCenterOnUser={handleCenterOnUser}
-        />
+        <div className="absolute left-4 bottom-4 z-30">
+          <MapControls
+            onZoomIn={handleZoomIn}
+            onZoomOut={handleZoomOut}
+            onCenterOnUser={handleCenterOnUser}
+            onShowDistanceCalculator={handleShowDistanceCalculator}
+          />
+        </div>
       )}
-      
+      {/* Distance Calculator Popup */}{" "}
+      {mapLoaded && showDistanceCalculator && (
+        <div className="absolute left-4 top-20 z-50 map-marker-animation">
+          <DistanceCalculator
+            onClose={() => setShowDistanceCalculator(false)}
+          />
+        </div>
+      )}
       {mapLoaded && selectedBuilding && (
-        <div className="absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-40">
-          <MapMarker 
+        <div className="absolute top-4 right-4 z-40 max-w-xs">
+          <MapMarker
             building={selectedBuilding}
             onClose={() => onMarkerSelect && onMarkerSelect(null as any)}
           />

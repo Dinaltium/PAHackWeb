@@ -14,13 +14,14 @@ Currently, the API does not implement authentication. This may be added in futur
 
 ### Buildings
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/buildings` | Get all buildings |
-| GET | `/buildings/:id` | Get a building by ID |
-| POST | `/buildings` | Create a new building |
+| Method | Endpoint         | Description           |
+| ------ | ---------------- | --------------------- |
+| GET    | `/buildings`     | Get all buildings     |
+| GET    | `/buildings/:id` | Get a building by ID  |
+| POST   | `/buildings`     | Create a new building |
 
 #### Example Response - GET `/buildings`
+
 ```json
 [
   {
@@ -33,20 +34,21 @@ Currently, the API does not implement authentication. This may be added in futur
     "type": "academic",
     "address": "College Road, Konaje",
     "campus": "PA College of Engineering, Konaje, Mangalore"
-  },
+  }
   // More buildings...
 ]
 ```
 
 ### Classrooms
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/buildings/:buildingId/classrooms` | Get all classrooms in a building |
-| GET | `/classrooms/:id` | Get a classroom by ID |
-| POST | `/classrooms` | Create a new classroom |
+| Method | Endpoint                            | Description                      |
+| ------ | ----------------------------------- | -------------------------------- |
+| GET    | `/buildings/:buildingId/classrooms` | Get all classrooms in a building |
+| GET    | `/classrooms/:id`                   | Get a classroom by ID            |
+| POST   | `/classrooms`                       | Create a new classroom           |
 
 #### Example Response - GET `/buildings/1/classrooms`
+
 ```json
 [
   {
@@ -55,21 +57,22 @@ Currently, the API does not implement authentication. This may be added in futur
     "roomNumber": "101",
     "floor": 1,
     "capacity": 60
-  },
+  }
   // More classrooms...
 ]
 ```
 
 ### Courses
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/courses` | Get all courses |
-| GET | `/courses/:id` | Get a course by ID |
-| GET | `/users/:userId/courses` | Get all courses for a user |
-| POST | `/courses` | Create a new course |
+| Method | Endpoint                 | Description                |
+| ------ | ------------------------ | -------------------------- |
+| GET    | `/courses`               | Get all courses            |
+| GET    | `/courses/:id`           | Get a course by ID         |
+| GET    | `/users/:userId/courses` | Get all courses for a user |
+| POST   | `/courses`               | Create a new course        |
 
 #### Example Response - GET `/courses`
+
 ```json
 [
   {
@@ -82,24 +85,25 @@ Currently, the API does not implement authentication. This may be added in futur
     "endTime": "10:30",
     "daysOfWeek": "Mon,Wed,Fri",
     "description": "Fundamentals of CS"
-  },
+  }
   // More courses...
 ]
 ```
 
 ### Events
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/events` | Get all events |
-| GET | `/events/:id` | Get an event by ID |
-| GET | `/users/:userId/events` | Get all events for a user |
-| GET | `/events/date/:date` | Get all events on a specific date |
-| POST | `/events` | Create a new event |
-| PUT | `/events/:id` | Update an event |
-| DELETE | `/events/:id` | Delete an event |
+| Method | Endpoint                | Description                       |
+| ------ | ----------------------- | --------------------------------- |
+| GET    | `/events`               | Get all events                    |
+| GET    | `/events/:id`           | Get an event by ID                |
+| GET    | `/users/:userId/events` | Get all events for a user         |
+| GET    | `/events/date/:date`    | Get all events on a specific date |
+| POST   | `/events`               | Create a new event                |
+| PUT    | `/events/:id`           | Update an event                   |
+| DELETE | `/events/:id`           | Delete an event                   |
 
 #### Example Response - GET `/events`
+
 ```json
 [
   {
@@ -113,19 +117,20 @@ Currently, the API does not implement authentication. This may be added in futur
     "description": "Latest trends in technology",
     "isPinned": false,
     "createdBy": 1
-  },
+  }
   // More events...
 ]
 ```
 
 ### Users
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/users/:id` | Get a user by ID |
-| POST | `/users` | Create a new user |
+| Method | Endpoint     | Description       |
+| ------ | ------------ | ----------------- |
+| GET    | `/users/:id` | Get a user by ID  |
+| POST   | `/users`     | Create a new user |
 
 #### Example Response - GET `/users/1`
+
 ```json
 {
   "id": 1,
@@ -138,13 +143,14 @@ Currently, the API does not implement authentication. This may be added in futur
 
 ### Favorites
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/users/:userId/favorites` | Get all favorites for a user |
-| POST | `/favorites` | Create a new favorite |
-| DELETE | `/favorites/:id` | Delete a favorite |
+| Method | Endpoint                   | Description                  |
+| ------ | -------------------------- | ---------------------------- |
+| GET    | `/users/:userId/favorites` | Get all favorites for a user |
+| POST   | `/favorites`               | Create a new favorite        |
+| DELETE | `/favorites/:id`           | Delete a favorite            |
 
 #### Example Response - GET `/users/1/favorites`
+
 ```json
 [
   {
@@ -152,21 +158,22 @@ Currently, the API does not implement authentication. This may be added in futur
     "userId": 1,
     "buildingId": 2,
     "type": "building"
-  },
+  }
   // More favorites...
 ]
 ```
 
 ### Student Locations
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/users/:userId/location` | Get a student's location |
-| GET | `/locations/sharing` | Get all students sharing their location |
-| POST | `/locations` | Create a new student location |
-| PUT | `/users/:userId/location` | Update a student's location |
+| Method | Endpoint                  | Description                             |
+| ------ | ------------------------- | --------------------------------------- |
+| GET    | `/users/:userId/location` | Get a student's location                |
+| GET    | `/locations/sharing`      | Get all students sharing their location |
+| POST   | `/locations`              | Create a new student location           |
+| PUT    | `/users/:userId/location` | Update a student's location             |
 
 #### Example Response - GET `/users/2/location`
+
 ```json
 {
   "id": 1,
@@ -184,13 +191,13 @@ Currently, the API does not implement authentication. This may be added in futur
 
 The API returns the following status codes:
 
-| Code | Description |
-|------|-------------|
-| 200 | Success |
-| 201 | Created |
-| 400 | Bad Request |
-| 404 | Not Found |
-| 500 | Server Error |
+| Code | Description  |
+| ---- | ------------ |
+| 200  | Success      |
+| 201  | Created      |
+| 400  | Bad Request  |
+| 404  | Not Found    |
+| 500  | Server Error |
 
 ## Testing the API
 

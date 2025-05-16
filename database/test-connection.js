@@ -1,5 +1,7 @@
-const { Pool } = require("pg");
-const readline = require("readline");
+import pg from "pg";
+import readline from "readline";
+
+const { Pool } = pg;
 
 // Create interface for reading user input
 const rl = readline.createInterface({

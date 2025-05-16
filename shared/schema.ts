@@ -1,4 +1,12 @@
-import { pgTable, text, serial, integer, boolean, timestamp, real } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  text,
+  serial,
+  integer,
+  boolean,
+  timestamp,
+  real,
+} from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -28,7 +36,9 @@ export const buildings = pgTable("buildings", {
 
 export const studentLocations = pgTable("student_locations", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id),
+  userId: integer("user_id")
+    .notNull()
+    .references(() => users.id),
   latitude: text("latitude").notNull(),
   longitude: text("longitude").notNull(),
   accuracy: real("accuracy"),
@@ -138,7 +148,9 @@ export const insertFavoriteSchema = createInsertSchema(favorites).pick({
   type: true,
 });
 
-export const insertStudentLocationSchema = createInsertSchema(studentLocations).pick({
+export const insertStudentLocationSchema = createInsertSchema(
+  studentLocations
+).pick({
   userId: true,
   latitude: true,
   longitude: true,
