@@ -24,11 +24,49 @@ const babelLoaderConfiguration = {
   },
 };
 
-module.exports = async function (env, argv) {
-  const config = await createExpoWebpackConfigAsync(env, argv);
+// Add TypeScript loader configuration
+const typescriptLoaderConfiguration = {
+  test: /\.(ts|tsx)$/,
+  // Include the expo module in our TypeScript configuration
+  include: [
+    path.resolve(__dirname),
+    path.resolve(__dirname, "node_modules/expo"),
+    path.resolve(__dirname, "node_modules/@expo"),
+  ],
+  use: {
+    loader: "babel-loader",
+    options: {
+      presets: ["babel-preset-expo", "@babel/preset-typescript"],
+      plugins: ["react-native-reanimated/plugin"],
+    },
+  },
+};
 
-  // Add the babel-loader configuration
+// Add specific rule for Expo TypeScript files
+const expoTypeScriptLoaderConfiguration = {
+  test: /\.ts$/,
+  include: [
+    path.resolve(__dirname, "node_modules/expo/src"),
+    path.resolve(__dirname, "node_modules/@expo"),
+  ],
+  use: {
+    loader: "babel-loader",
+    options: {
+      presets: ["@babel/preset-env", "@babel/preset-typescript"],
+      plugins: [],
+    },
+  },
+};
+
+module.exports = async function (env, argv) {
+  const config = await createExpoWebpackConfigAsync(env, argv); // Add the babel-loader configuration
   config.module.rules.push(babelLoaderConfiguration);
+  // Add the TypeScript loader configuration
+  config.module.rules.push(typescriptLoaderConfiguration);
+  // Add the Expo TypeScript loader configuration
+  config.module.rules.push(expoTypeScriptLoaderConfiguration);
+  // Add the Expo TypeScript loader configuration
+  config.module.rules.push(expoTypeScriptLoaderConfiguration);
 
   // Customize the config before returning it
   if (!config.resolve) {
@@ -96,7 +134,45 @@ module.exports = async function (env, argv) {
     ),
     "../Components/AccessibilityInfo/legacySendAccessibilityEvent":
       path.resolve(webPolyfillsPath, "noop.js"),
+
+    // Add an alias for Expo.ts
+    "expo/src/Expo.ts": path.resolve(webPolyfillsPath, "Expo.js"),
+    "expo/src/Expo": path.resolve(webPolyfillsPath, "Expo.js"),
   });
+  // Add this to resolve the React DevTools source map warnings
+  if (!config.resolve.fallback) {
+    config.resolve.fallback = {};
+  }
+
+  // Add fallbacks for node.js core modules
+  Object.assign(config.resolve.fallback, {
+    buffer: require.resolve("buffer/"),
+    crypto: require.resolve("crypto-browserify"),
+    stream: require.resolve("stream-browserify"),
+    util: require.resolve("util/"),
+  });
+
+  // Disable source maps for react-devtools-core to avoid warnings
+  // Ensure null-loader is applied to react-devtools-core source maps
+  if (config.module && config.module.rules) {
+    config.module.rules.push({
+      test: /react-devtools-core\/dist\/backend\.js$/,
+      use: "null-loader",
+    });
+  }
+
+  // Exclude react-devtools-core from source-map-loader
+  if (config.module && config.module.rules) {
+    config.module.rules.forEach((rule) => {
+      if (rule.use && rule.use.loader === "source-map-loader") {
+        rule.exclude = rule.exclude || [];
+        rule.exclude.push(/react-devtools-core/);
+      }
+    });
+  }
+
+  // Disable source maps globally to prevent warnings
+  config.devtool = false;
 
   return config;
 };

@@ -1,0 +1,26 @@
+{
+  "parser": "@babel/eslint-parser",
+  "settings": {
+    "react": {
+      "version": "detect"
+    }
+  },
+  "env": {
+    "browser": true,
+    "es2021": true
+  },
+  "extends": [
+    "plugin:react/recommended",
+    "standard",
+    "plugin:typescript/jsx-runtime",
+    "plugin:testing-library/typescript",
+    "plugin:jest/all"
+  ],
+  "parserOptions": {
+    "sourceType": "module",
+    "babelOptions": {
+      "presets": ["@babel/preset-typescript"]
+    }
+  },
+  "rules": {}
+}

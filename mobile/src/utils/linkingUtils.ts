@@ -33,7 +33,9 @@ export const linking = {
   },
   // Custom handler function to handle specific deep links
   async getInitialURL() {
+    console.log("getInitialURL invoked");
     // Handle app-specific logic here if needed
+    console.log("Returning null as initial URL");
     return null;
   },
 };

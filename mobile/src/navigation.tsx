@@ -31,6 +31,9 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 
 // Bottom tab navigator
 function MainTabs() {
+  console.log("MainTabs component rendered");
+  console.log("Tab.Navigator initialized with routes: Map, Schedule, Settings");
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -79,6 +82,9 @@ function MainTabs() {
 
 // Main navigation container
 export default function Navigation() {
+  console.log("Navigation component rendered");
+  console.log("Initial route name:", "Main");
+
   return (
     <NavigationContainer linking={linking}>
       <Stack.Navigator initialRouteName="Main">

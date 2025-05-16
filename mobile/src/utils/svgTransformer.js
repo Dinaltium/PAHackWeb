@@ -1,24 +1,54 @@
-// Custom SVG transformer for React Native
-const { default: svgr } = require("@svgr/core");
+// Simple SVG transformer for React Native
 const fs = require("fs");
 
 module.exports.transform = function ({ src, filename, options }) {
-  // Convert SVG to React Native component
-  const svgCode = fs.readFileSync(filename, "utf8");
+  try {
+    // Read the SVG file
+    const svgCode = fs.readFileSync(filename, "utf8");
 
-  const svgrOptions = {
-    plugins: ["@svgr/plugin-svgo", "@svgr/plugin-jsx"],
-    native: true,
-    dimensions: true,
-    typescript: true,
-  };
+    // Create a simple React Native component that renders the SVG as an image
+    const componentName = "SvgComponent";
+    const base64Content = Buffer.from(svgCode).toString("base64");
 
-  // Transform SVG to React Native component
-  const jsCode = svgr.sync(svgCode, svgrOptions, {
-    componentName: "SvgComponent",
-  });
+    // Generate a simple component that uses Image to display the SVG
+    const jsCode = `
+      import React from 'react';
+      import { Image } from 'react-native';
+      
+      const ${componentName} = (props) => {
+        return (
+          <Image 
+            source={{ uri: 'data:image/svg+xml;base64,${base64Content}' }}
+            style={props.style || { width: 100, height: 100 }}
+            {...props}
+          />
+        );
+      };
+      
+      export default ${componentName};
+    `;
 
-  return {
-    code: jsCode,
-  };
+    return {
+      code: jsCode,
+    };
+  } catch (error) {
+    console.error("Error in SVG transformer:", error);
+    // Return a placeholder component in case of error
+    return {
+      code: `
+        import React from 'react';
+        import { View, Text } from 'react-native';
+        
+        const SvgComponent = (props) => {
+          return (
+            <View style={props.style || { width: 100, height: 100, backgroundColor: '#ccc' }}>
+              <Text>SVG Error</Text>
+            </View>
+          );
+        };
+        
+        export default SvgComponent;
+      `,
+    };
+  }
 };

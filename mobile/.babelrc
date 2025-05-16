@@ -1,0 +1,119 @@
+{
+  "env": {
+    "development": {
+      "presets": [
+        "next/babel",
+        "@babel/preset-typescript",
+        "@zeit/next-typescript/babel"
+      ],
+      "plugins": [
+        [
+          "styled-components",
+          {
+            "ssr": true,
+            "displayName": true
+          }
+        ],
+        [
+          "@babel/plugin-proposal-decorators",
+          {
+            "legacy": true
+          }
+        ],
+        [
+          "@babel/plugin-transform-class-properties",
+          {
+            "loose": true
+          }
+        ],
+        [
+          "@babel/plugin-transform-private-methods",
+          {
+            "loose": true
+          }
+        ],
+        [
+          "@babel/plugin-transform-private-property-in-object",
+          {
+            "loose": true
+          }
+        ]
+      ]
+    },
+    "production": {
+      "presets": ["next/babel", "@zeit/next-typescript/babel"],
+      "plugins": [
+        [
+          "styled-components",
+          {
+            "ssr": true,
+            "displayName": true
+          }
+        ],
+        [
+          "@babel/plugin-proposal-decorators",
+          {
+            "legacy": true
+          }
+        ],
+        [
+          "@babel/plugin-transform-class-properties",
+          {
+            "loose": true
+          }
+        ],
+        [
+          "@babel/plugin-transform-private-methods",
+          {
+            "loose": true
+          }
+        ],
+        [
+          "@babel/plugin-transform-private-property-in-object",
+          {
+            "loose": true
+          }
+        ]
+      ]
+    },
+    "test": {
+      "presets": [
+        [
+          "next/babel",
+          {
+            "preset-env": {
+              "modules": "commonjs"
+            }
+          }
+        ]
+      ],
+      "plugins": [
+        [
+          "styled-components",
+          {
+            "ssr": true,
+            "displayName": true
+          }
+        ],
+        [
+          "@babel/plugin-transform-class-properties",
+          {
+            "loose": true
+          }
+        ],
+        [
+          "@babel/plugin-transform-private-methods",
+          {
+            "loose": true
+          }
+        ],
+        [
+          "@babel/plugin-transform-private-property-in-object",
+          {
+            "loose": true
+          }
+        ]
+      ]
+    }
+  }
+}
